@@ -8,6 +8,9 @@ import pulseio
 import random
 import time
 
+def round(x):
+    return int(x+0.5)
+
 ir_pwm = pulseio.PWMOut(board.IR_TX, frequency=20000, duty_cycle=65536//4)
 proximity = analogio.AnalogIn(board.IR_PROXIMITY)
 
@@ -40,9 +43,9 @@ while True:
                                  random.randint(0,1),
                                  random.randint(0,1))
 
-        pixels.fill((int((prox-min_proximity)*scale)*rgb_selection[0],
-                     int((prox-min_proximity)*scale)*rgb_selection[1],
-                     int((prox-min_proximity)*scale)*rgb_selection[2]))
+        pixels.fill(((round((prox-min_proximity)*scale)+4)*rgb_selection[0],
+                     (round((prox-min_proximity)*scale)+4)*rgb_selection[1],
+                     (round((prox-min_proximity)*scale)+4)*rgb_selection[2]))
     else:
         color_locked = False
         pixels.fill((0, 0, 0))
