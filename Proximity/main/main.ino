@@ -6,7 +6,8 @@ const int PROXIMITY = A10;
 int proximity = 0;
 int tick_count = 0;
 enum State {INACTIVE, READY, LOCKED, FLAT, INVERTED, TILTED_LEFT, TILTED_RIGHT, TILTED_FORWARD,
-            TILTED_BACKWARD};
+            TILTED_BACKWARD,  INVERTED_TILTED_LEFT, INVERTED_TILTED_RIGHT, INVERTED_TILTED_FORWARD,
+            INVERTED_TILTED_BACKWARD};
 const uint16_t PROXIMITY_THRESHOLD = 600;
 State state = INACTIVE;
 
@@ -23,8 +24,14 @@ void setup() {
 
 void loop() {
   float a_x = (CircuitPlayground.motionX() - 0.268867) / 9.44291;
-  float a_y = (CircuitPlayground.motionX() + 0.194099) / 9.76308;
-  float a_z = (CircuitPlayground.motionX() - 0.105363) / 9.7;
+  float a_y = (CircuitPlayground.motionY() + 0.194099) / 9.76308;
+  float a_z = (CircuitPlayground.motionZ() - 0.105363) / 9.7;
+  /*
+  Serial.print(a_x); Serial.print("G, ");
+  Serial.print(a_y); Serial.print("G, ");
+  Serial.print(a_z); Serial.println("G");
+  */
+  
   switch (state) {
   case INACTIVE:
     CircuitPlayground.clearPixels();
@@ -35,7 +42,7 @@ void loop() {
     }
     break;
   case READY:
-    setPixelsColor(1, 10, 255, 255, 255);
+    setPixelsColor(0, 9, 255, 255, 255);
     if (proximity < PROXIMITY_THRESHOLD) {
       state = INACTIVE;
     } else if (abs(a_x) <= 0.2 && a_y >= 0.75 && a_z <= 0.65) {
@@ -43,65 +50,127 @@ void loop() {
     }
     break;
   case LOCKED:
-    setPixelsColor(1, 10, 0, 255, 0);
-    if (proximity < PROXMITY_THRESHOLD && abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z >= 0.8) {
+    setPixelsColor(0, 9, 0, 255, 0);
+    if (proximity < PROXIMITY_THRESHOLD && abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z >= 0.8) {
       state = FLAT;
     }
     break;
   case FLAT:
-    setPixelsColor(1, 10, 0, 0, 255);
-    if (proximity > PROXMITY_THRESHOLD) {
+    setPixelsColor(0, 9, 0, 0, 255);
+    if (proximity > PROXIMITY_THRESHOLD) {
       state = READY;
     } else if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z <= -0.8) {
       state = INVERTED;
-    } else if (a_x <= -0.8 && abs(a_y) <= 0.4 && a_z <= 0.4) {
+    } else if (a_x <= -0.8 && abs(a_y) <= 0.4 && abs(a_z) <= 0.4) {
       state = TILTED_LEFT;
+    } else if (a_x >= 0.8 && abs(a_y) <= 0.4 && abs(a_z) <= 0.4) {
+      state = TILTED_RIGHT;
     } else if (abs(a_x) <= 0.2 && a_y >= 0.75 && a_z <= 0.65) {
       state = TILTED_FORWARD;
-    } else if (a_x >= 0.8 && abs(a_y) <= 0.4 && a_z <= 0.4) {
-      state = TILTED_RIGHT;
-    } else if (abs(a_x) <= 0.2 && a_y <= -0.75 && abs(a_z) <= 0.65) {
+    } else if (abs(a_x) <= 0.2 && a_y <= -0.75 && a_z <= 0.65) {
       state = TILTED_BACKWARD;
     }
     break;
   case INVERTED:
-      pixels.fill((0, 255, 0))
-      if abs(cal_x) < 0.5 and abs(cal_y) < 0.5 and cal_z >= 0.8:
-          state = State.FLAT
-      # elif cal_x <= -0.8 and abs(cal_y) <= 0.4 and cal_z <= 0.4:
-          # state = State.INVERTED_TILTED_LEFT
-      elif abs(cal_x) <= 0.2 and cal_y >= 0.75 and cal_z <= 0.65:
-          state = State.INVERTED_TILTED_FORWARD
-      # elif cal_x >= 0.8 and abs(cal_y) <= 0.4 and cal_z <= 0.4:
-          # state = State.INVERTED_TILTED_RIGHT
-      elif abs(cal_x) <= 0.2 and cal_y <= -0.75 and cal_z <= 0.65:
-          state = State.INVERTED_TILTED_BACKWARD
+    setPixelsColor(0, 9, 255, 0, 0);
+    if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z >= 0.8) {
+      state = FLAT;
+    } else if (a_x >= 0.8 && abs(a_y) <= 0.4 && abs(a_z) <= 0.4) {
+      state = INVERTED_TILTED_LEFT;
+    } else if (a_x <= -0.8 && abs(a_y) <= 0.4 && abs(a_z) <= 0.4) {
+      state = INVERTED_TILTED_RIGHT;
+    } else if (abs(a_x) <= 0.2 && a_y >= 0.75 && a_z >= -0.65) {
+      state = INVERTED_TILTED_FORWARD;
+    } else if (abs(a_x) <= 0.2 && a_y <= -0.75 && a_z >= -0.65) {
+      state = INVERTED_TILTED_BACKWARD;
+    }
     break;
   case TILTED_LEFT:
-      pixels.fill((85, 170, 255))
-      if abs(cal_x) < 0.5 and abs(cal_y) < 0.5 and cal_z >= 0.8:
-          state = State.FLAT
+    setPixelsColor(0, 5, 0, 0, 255);
+    setPixelsColor(6, 8, 255, 0, 0);
+    CircuitPlayground.setPixelColor(9, 0, 0, 255);
+    if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z >= 0.8) {
+      state = FLAT;
+    } else if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z <= -0.8) {
+      state = INVERTED;
+    }
     break;
   case TILTED_RIGHT:
-      pixels.fill((255, 170, 85))
-      if abs(cal_x) < 0.5 and abs(cal_y) < 0.5 and cal_z >= 0.8:
-          state = State.FLAT
+    CircuitPlayground.setPixelColor(0, 0, 0, 255);
+    setPixelsColor(1, 3, 255, 0, 0);
+    setPixelsColor(4, 9, 0, 0, 255);
+    if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z >= 0.8) {
+      state = FLAT;
+    } else if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z <= -0.8) {
+      state = INVERTED;
+    }
     break;
   case TILTED_FORWARD:
-      pixels.fill((0, 170, 255))  # red
-      if abs(cal_x) < 0.5 and abs(cal_y) < 0.5 and cal_z >= 0.8:
-          state = State.FLAT
+    setPixelsColor(0, 2, 0, 0, 255);
+    setPixelsColor(3, 6, 255, 0, 0);
+    setPixelsColor(7, 9, 0, 0, 255);
+    if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z >= 0.8) {
+      state = FLAT;
+    } else if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z <= -0.8) {
+      state = INVERTED;
+    }
     break;
   case TILTED_BACKWARD:
-      pixels.fill((0, 85, 255))  # green
-      if abs(cal_x) < 0.5 and abs(cal_y) < 0.5 and cal_z >= 0.8:
-          state = State.FLAT
+    setPixelsColor(0, 1, 255, 0, 0);
+    setPixelsColor(2, 7, 0, 0, 255);
+    setPixelsColor(8, 9, 255, 0, 0);
+    if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z >= 0.8) {
+      state = FLAT;
+    } else if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z <= -0.8) {
+      state = INVERTED;
+    }
     break;
-  delay(250);
+  case INVERTED_TILTED_LEFT:
+    setPixelsColor(0, 5, 255, 0, 0);
+    setPixelsColor(6, 8, 0, 0, 255);
+    CircuitPlayground.setPixelColor(9, 255, 0, 0);
+    if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z >= 0.8) {
+      state = FLAT;
+    } else if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z <= -0.8) {
+      state = INVERTED;
+    }
+    break;
+  case INVERTED_TILTED_RIGHT:
+    CircuitPlayground.setPixelColor(0, 255, 0, 0);
+    setPixelsColor(1, 3, 0, 0, 255);
+    setPixelsColor(4, 9, 255, 0, 0);
+    if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z >= 0.8) {
+      state = FLAT;
+    } else if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z <= -0.8) {
+      state = INVERTED;
+    }
+    break;
+  case INVERTED_TILTED_FORWARD:
+    setPixelsColor(0, 1, 0, 0, 255);
+    setPixelsColor(2, 7, 255, 0, 0);
+    setPixelsColor(8, 9, 0, 0, 255);
+    if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z >= 0.8) {
+      state = FLAT;
+    } else if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z <= -0.8) {
+      state = INVERTED;
+    }
+    break;
+  case INVERTED_TILTED_BACKWARD:
+    setPixelsColor(0, 2, 255, 0, 0);
+    setPixelsColor(3, 6, 0, 0, 255);
+    setPixelsColor(7, 9, 255, 0, 0);
+    if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z >= 0.8) {
+      state = FLAT;
+    } else if (abs(a_x) < 0.5 && abs(a_y) < 0.5 && a_z <= -0.8) {
+      state = INVERTED;
+    }
+    break;
+  }
+  delay(100);
 }
 
 void setPixelsColor(uint8_t startIndex, uint8_t stopIndex, uint8_t r, uint8_t g, uint8_t b) {
-  for (uint8_t index = startIndex; index < stopIndex; ++index) {
+  for (uint8_t index = startIndex; index <= stopIndex; ++index) {
     CircuitPlayground.setPixelColor(index, r, g, b);
   }
 }
@@ -112,7 +181,7 @@ void TCC1_Handler() {
     digitalWrite(25, tick_count % 32 == 0);
     if (tick_count > 32) {
       proximity = analogRead(PROXIMITY);
-      Serial.println(proximity);
+      // Serial.println(proximity);
       tick_count = 0;
     }
     TC->INTFLAG.bit.OVF = 1;
